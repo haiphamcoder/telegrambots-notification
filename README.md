@@ -518,9 +518,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] Markdown formatter support ✅
 - [x] Parse mode selection (HTML, Markdown, MarkdownV2) ✅
 - [x] Photo and document sending capabilities ✅
-- [ ] Webhook support for receiving updates
-- [ ] Metrics and monitoring integration
-- [ ] Spring Boot auto-configuration
 
 ## Support
 
