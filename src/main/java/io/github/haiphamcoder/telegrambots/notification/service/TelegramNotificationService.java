@@ -4,6 +4,7 @@ import io.github.haiphamcoder.telegrambots.notification.client.TelegramBotApiCli
 import io.github.haiphamcoder.telegrambots.notification.exception.TelegramRateLimitException;
 import io.github.haiphamcoder.telegrambots.notification.model.BotConfig;
 import io.github.haiphamcoder.telegrambots.notification.model.NotificationMessage;
+import io.github.haiphamcoder.telegrambots.notification.model.ParseMode;
 import io.github.haiphamcoder.telegrambots.notification.provider.BotConfigProvider;
 import io.github.haiphamcoder.telegrambots.notification.template.NotificationFormatter;
 import io.github.haiphamcoder.telegrambots.notification.util.MessageSplitter;
@@ -104,7 +105,7 @@ public class TelegramNotificationService {
      *
      * @param botName the name of the bot to use
      * @param message the notification message to send
-     * @param customTemplate the custom HTML template to use
+     * @param customTemplate the custom template to use
      * @throws IllegalArgumentException if any parameter is null
      * @throws io.github.haiphamcoder.telegrambots.notification.exception.TelegramApiException if sending fails
      */
@@ -124,8 +125,70 @@ public class TelegramNotificationService {
             throw new IllegalArgumentException("Bot not found: " + botName);
         }
         
-        String html = formatter.format(message, customTemplate);
-        sendHtmlMessage(botConfig, html);
+        String content = formatter.format(message, customTemplate);
+        sendMessage(botConfig, content, formatter.mode());
+    }
+
+    /**
+     * Sends a notification message using the specified bot with the specified parse mode.
+     *
+     * @param botName the name of the bot to use
+     * @param message the notification message to send
+     * @param parseMode the parse mode to use
+     * @throws IllegalArgumentException if any parameter is null
+     * @throws io.github.haiphamcoder.telegrambots.notification.exception.TelegramApiException if sending fails
+     */
+    public void send(String botName, NotificationMessage message, ParseMode parseMode) {
+        if (botName == null || botName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bot name cannot be null or empty");
+        }
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+        if (parseMode == null) {
+            throw new IllegalArgumentException("Parse mode cannot be null");
+        }
+        
+        BotConfig botConfig = botConfigProvider.get(botName);
+        if (botConfig == null) {
+            throw new IllegalArgumentException("Bot not found: " + botName);
+        }
+        
+        String content = formatter.format(message);
+        sendMessage(botConfig, content, parseMode);
+    }
+
+    /**
+     * Sends a notification message using the specified bot with a custom template and parse mode.
+     *
+     * @param botName the name of the bot to use
+     * @param message the notification message to send
+     * @param customTemplate the custom template to use
+     * @param parseMode the parse mode to use
+     * @throws IllegalArgumentException if any parameter is null
+     * @throws io.github.haiphamcoder.telegrambots.notification.exception.TelegramApiException if sending fails
+     */
+    public void send(String botName, NotificationMessage message, String customTemplate, ParseMode parseMode) {
+        if (botName == null || botName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bot name cannot be null or empty");
+        }
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+        if (customTemplate == null || customTemplate.trim().isEmpty()) {
+            throw new IllegalArgumentException("Custom template cannot be null or empty");
+        }
+        if (parseMode == null) {
+            throw new IllegalArgumentException("Parse mode cannot be null");
+        }
+        
+        BotConfig botConfig = botConfigProvider.get(botName);
+        if (botConfig == null) {
+            throw new IllegalArgumentException("Bot not found: " + botName);
+        }
+        
+        String content = formatter.format(message, customTemplate);
+        sendMessage(botConfig, content, parseMode);
     }
 
     /**
@@ -134,12 +197,26 @@ public class TelegramNotificationService {
      *
      * @param botConfig the bot configuration
      * @param html the HTML content to send
+     * @deprecated Use {@link #sendMessage(BotConfig, String, ParseMode)} instead
      */
+    @Deprecated
     private void sendHtmlMessage(BotConfig botConfig, String html) {
-        List<String> parts = MessageSplitter.safeSplitHtml(html, messageSoftLimit);
+        sendMessage(botConfig, html, ParseMode.HTML);
+    }
+
+    /**
+     * Sends a message using the specified bot configuration.
+     * This method handles message splitting and retry logic.
+     *
+     * @param botConfig the bot configuration
+     * @param content the content to send
+     * @param parseMode the parse mode to use
+     */
+    private void sendMessage(BotConfig botConfig, String content, ParseMode parseMode) {
+        List<String> parts = MessageSplitter.safeSplit(content, messageSoftLimit, parseMode);
         
         if (parts.size() > 1) {
-            logger.info("Message split into {} parts for bot {}", parts.size(), botConfig.getName());
+            logger.info("Message split into {} parts for bot {} using {}", parts.size(), botConfig.getName(), parseMode);
         }
         
         for (int i = 0; i < parts.size(); i++) {
@@ -148,7 +225,7 @@ public class TelegramNotificationService {
                 part = String.format("Part %d/%d\n\n%s", i + 1, parts.size(), part);
             }
             
-            sendWithRetry(botConfig, part);
+            sendWithRetry(botConfig, part, parseMode);
         }
     }
 
@@ -156,14 +233,15 @@ public class TelegramNotificationService {
      * Sends a message with retry logic for rate limiting.
      *
      * @param botConfig the bot configuration
-     * @param html the HTML content to send
+     * @param content the content to send
+     * @param parseMode the parse mode to use
      */
-    private void sendWithRetry(BotConfig botConfig, String html) {
+    private void sendWithRetry(BotConfig botConfig, String content, ParseMode parseMode) {
         int attempt = 0;
         
         while (retryPolicy.shouldRetry(attempt)) {
             try {
-                sendSingleMessage(botConfig, html);
+                sendSingleMessage(botConfig, content, parseMode);
                 return; // Success, exit retry loop
                 
             } catch (TelegramRateLimitException e) {
@@ -193,15 +271,28 @@ public class TelegramNotificationService {
     }
 
     /**
-     * Sends a single message using the bot API client.
+     * Sends a message with retry logic for rate limiting (HTML mode).
      *
      * @param botConfig the bot configuration
      * @param html the HTML content to send
+     * @deprecated Use {@link #sendWithRetry(BotConfig, String, ParseMode)} instead
      */
-    private void sendSingleMessage(BotConfig botConfig, String html) {
+    @Deprecated
+    private void sendWithRetry(BotConfig botConfig, String html) {
+        sendWithRetry(botConfig, html, ParseMode.HTML);
+    }
+
+    /**
+     * Sends a single message using the bot API client.
+     *
+     * @param botConfig the bot configuration
+     * @param content the content to send
+     * @param parseMode the parse mode to use
+     */
+    private void sendSingleMessage(BotConfig botConfig, String content, ParseMode parseMode) {
         TelegramBotApiClient client = new TelegramBotApiClient(botConfig);
         try {
-            client.sendMessageHtml(html);
+            client.sendMessage(content, parseMode);
         } catch (Exception e) {
             logger.error("Failed to send message with bot {}", botConfig.getName(), e);
             throw e;
@@ -212,6 +303,18 @@ public class TelegramNotificationService {
                 logger.warn("Failed to close client for bot {}", botConfig.getName(), e);
             }
         }
+    }
+
+    /**
+     * Sends a single HTML message using the bot API client.
+     *
+     * @param botConfig the bot configuration
+     * @param html the HTML content to send
+     * @deprecated Use {@link #sendSingleMessage(BotConfig, String, ParseMode)} instead
+     */
+    @Deprecated
+    private void sendSingleMessage(BotConfig botConfig, String html) {
+        sendSingleMessage(botConfig, html, ParseMode.HTML);
     }
 
     /**

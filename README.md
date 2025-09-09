@@ -41,7 +41,7 @@ implementation 'io.github.haiphamcoder:telegrambots-notification:1.0.0-SNAPSHOT'
 import io.github.haiphamcoder.telegrambots.notification.model.*;
 import io.github.haiphamcoder.telegrambots.notification.provider.StaticBotConfigProvider;
 import io.github.haiphamcoder.telegrambots.notification.service.TelegramNotificationService;
-import io.github.haiphamcoder.telegrambots.notification.template.DefaultHtmlNotificationFormatter;
+import io.github.haiphamcoder.telegrambots.notification.template.*;
 import io.github.haiphamcoder.telegrambots.notification.util.RetryPolicy;
 
 // Configure bots
@@ -79,6 +79,11 @@ var message = NotificationMessage.builder()
     .build();
 
 service.send("botA", message);
+
+// Send with different parse modes
+service.send("botA", message, ParseMode.HTML);        // HTML (default)
+service.send("botA", message, ParseMode.MARKDOWN);    // Markdown
+service.send("botA", message, ParseMode.MARKDOWN_V2); // MarkdownV2 (recommended)
 ```
 
 ### Advanced Configuration
@@ -234,9 +239,78 @@ try {
 }
 ```
 
+## Parse Modes
+
+The library supports three parse modes for different markup languages:
+
+### HTML (Default)
+```java
+// HTML is the default parse mode
+service.send("botA", message);
+service.send("botA", message, ParseMode.HTML);
+```
+
+### Markdown
+```java
+// Send with Markdown formatting
+service.send("botA", message, ParseMode.MARKDOWN);
+
+// Using custom Markdown formatter
+var markdownFormatter = new MarkdownNotificationFormatter();
+var service = new TelegramNotificationService(botConfigProvider, markdownFormatter);
+service.send("botA", message);
+```
+
+### MarkdownV2
+```java
+// Send with MarkdownV2 formatting (recommended for new projects)
+service.send("botA", message, ParseMode.MARKDOWN_V2);
+
+// Using custom MarkdownV2 formatter
+var markdownV2Formatter = new MarkdownV2NotificationFormatter();
+var service = new TelegramNotificationService(botConfigProvider, markdownV2Formatter);
+service.send("botA", message);
+```
+
+### Parse Mode Examples
+
+**HTML Output:**
+```html
+<b>⚠️ [WARNING]</b> <b>System Alert</b><br/>
+<i>Database connection lost</i><br/><br/>
+<blockquote><b>Context</b><br/>
+server: prod-web-01<br/>
+timestamp: 2023-01-01T12:00:00Z</blockquote>
+<i>Time:</i> <code>2023-01-01 12:00:00</code>
+```
+
+**Markdown Output:**
+```markdown
+⚠️ **[WARNING]** **System Alert**
+_Database connection lost_
+
+> **Context**
+server: prod-web-01
+timestamp: 2023-01-01T12:00:00Z
+
+_Time:_ `2023-01-01 12:00:00`
+```
+
+**MarkdownV2 Output:**
+```markdown
+⚠️ **\[WARNING\]** **System Alert**
+_Database connection lost_
+
+> *Context*
+server: prod\\-web\\-01
+timestamp: 2023\\-01\\-01T12:00:00Z
+
+_Time:_ `2023-01-01 12:00:00`
+```
+
 ## Message Splitting
 
-Messages longer than 4096 characters are automatically split:
+Messages longer than 4096 characters are automatically split with parse mode awareness:
 
 ```java
 // Long message will be split into multiple parts
@@ -246,7 +320,11 @@ var longMessage = NotificationMessage.builder()
     .body("Very long content...") // > 4096 characters
     .build();
 
+// HTML splitting (default)
 service.send("botA", longMessage);
+
+// MarkdownV2 splitting
+service.send("botA", longMessage, ParseMode.MARKDOWN_V2);
 // Will send: "Part 1/3\n\n[content]"
 //           "Part 2/3\n\n[content]"
 //           "Part 3/3\n\n[content]"
@@ -365,7 +443,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
-- [ ] MarkdownV2 formatter support
+- [x] MarkdownV2 formatter support ✅
+- [x] Markdown formatter support ✅
+- [x] Parse mode selection (HTML, Markdown, MarkdownV2) ✅
 - [ ] Photo and document sending capabilities
 - [ ] Webhook support for receiving updates
 - [ ] Metrics and monitoring integration
