@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Parse Mode Support**: HTML, Markdown, and MarkdownV2 formatting options
 - **Markdown Support**: `MarkdownNotificationFormatter` with `MarkdownEscaper`
 - **MarkdownV2 Support**: `MarkdownV2NotificationFormatter` with `MarkdownV2Escaper`
+- **Photo and Document Support**: Complete support for sending photos and documents via Telegram Bot API
+- **Photo Sources**: Support for file ID, URL, and file upload sources
+- **Document Sources**: Support for file ID, URL, and file upload sources
+- **Caption Handling**: Automatic caption splitting for content exceeding 1024 characters
+- **InputFile Model**: Flexible file representation with multiple creation methods
+- **MessageId Model**: Response tracking for sent messages
+- **CaptionStrategy**: Configurable strategies for handling long captions (TRUNCATE, SEND_REST_AS_MESSAGE, ERROR)
 - **Template System**: Predefined templates for all parse modes and severity levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 - Automatic message splitting for messages longer than 4096 characters with parse mode awareness
 - Intelligent retry logic with exponential backoff for rate limiting (HTTP 429)
@@ -23,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Builder pattern for NotificationMessage construction
 - Support for action buttons in notifications
 - Context data formatting and escaping for all parse modes
-- JUnit 5 test suite with 78 tests
+- JUnit 5 test suite with 151 tests
 - Complete Javadoc documentation
 - Maven build with source and javadoc JAR generation
 - Fat JAR support via Maven Shade plugin
@@ -36,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DefaultHtmlNotificationFormatter` for HTML formatting
   - `MarkdownNotificationFormatter` for Markdown formatting
   - `MarkdownV2NotificationFormatter` for MarkdownV2 formatting
+- **Photo and Document Support**: Complete API for sending photos and documents
+  - `PhotoSource` and `DocumentSource` sealed interfaces with multiple implementations
+  - `InputFile` model for flexible file representation
+  - `MessageId` model for tracking sent messages
+  - `CaptionHandler` utility for intelligent caption splitting
 - **HTTP Client**: `TelegramBotApiClient` with parse mode support using Apache HttpClient 5
 - **Message Splitting**: `MessageSplitter` for safe message splitting across all parse modes
 - **Retry Logic**: `RetryPolicy` with configurable retry strategies

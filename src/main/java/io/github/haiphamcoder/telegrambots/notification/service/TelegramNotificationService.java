@@ -2,11 +2,10 @@ package io.github.haiphamcoder.telegrambots.notification.service;
 
 import io.github.haiphamcoder.telegrambots.notification.client.TelegramBotApiClient;
 import io.github.haiphamcoder.telegrambots.notification.exception.TelegramRateLimitException;
-import io.github.haiphamcoder.telegrambots.notification.model.BotConfig;
-import io.github.haiphamcoder.telegrambots.notification.model.NotificationMessage;
-import io.github.haiphamcoder.telegrambots.notification.model.ParseMode;
+import io.github.haiphamcoder.telegrambots.notification.model.*;
 import io.github.haiphamcoder.telegrambots.notification.provider.BotConfigProvider;
 import io.github.haiphamcoder.telegrambots.notification.template.NotificationFormatter;
+import io.github.haiphamcoder.telegrambots.notification.util.CaptionHandler;
 import io.github.haiphamcoder.telegrambots.notification.util.MessageSplitter;
 import io.github.haiphamcoder.telegrambots.notification.util.RetryPolicy;
 import org.slf4j.Logger;
@@ -23,6 +22,7 @@ public class TelegramNotificationService {
     
     private static final Logger logger = LoggerFactory.getLogger(TelegramNotificationService.class);
     private static final int DEFAULT_MESSAGE_SOFT_LIMIT = 3900;
+    private static final CaptionStrategy DEFAULT_CAPTION_STRATEGY = CaptionStrategy.SEND_REST_AS_MESSAGE;
     
     private final BotConfigProvider botConfigProvider;
     private final NotificationFormatter formatter;
@@ -351,5 +351,251 @@ public class TelegramNotificationService {
      */
     public int getMessageSoftLimit() {
         return messageSoftLimit;
+    }
+
+    // ========== PHOTO METHODS ==========
+
+    /**
+     * Sends a photo with notification message to the specified bot.
+     *
+     * @param botName the name of the bot to use
+     * @param message the notification message
+     * @param photoSource the photo source
+     * @param caption the photo caption (optional)
+     * @param parseMode the parse mode for the caption
+     * @throws IllegalArgumentException if any required parameter is null or empty
+     */
+    public void sendPhoto(String botName, NotificationMessage message, PhotoSource photoSource, 
+                         String caption, ParseMode parseMode) throws Exception {
+        if (botName == null || botName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bot name cannot be null or empty");
+        }
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+        if (photoSource == null) {
+            throw new IllegalArgumentException("Photo source cannot be null");
+        }
+        if (parseMode == null) {
+            throw new IllegalArgumentException("Parse mode cannot be null");
+        }
+
+        BotConfig botConfig = botConfigProvider.get(botName);
+        if (botConfig == null) {
+            throw new IllegalArgumentException("Bot not found: " + botName);
+        }
+
+        // Format and process the caption if provided
+        String processedCaption = null;
+        String remainingText = null;
+        if (caption != null && !caption.trim().isEmpty()) {
+            String formattedCaption = formatter.format(message, caption);
+            CaptionHandler.CaptionResult result = CaptionHandler.processCaption(formattedCaption, DEFAULT_CAPTION_STRATEGY, parseMode);
+            processedCaption = result.caption();
+            remainingText = result.remainingText();
+        }
+
+        sendPhotoWithRetry(botConfig, photoSource, processedCaption, remainingText, parseMode);
+    }
+
+    /**
+     * Sends a photo with notification message to the specified bot using default parse mode.
+     *
+     * @param botName the name of the bot to use
+     * @param message the notification message
+     * @param photoSource the photo source
+     * @param caption the photo caption (optional)
+     * @throws IllegalArgumentException if any required parameter is null or empty
+     */
+    public void sendPhoto(String botName, NotificationMessage message, PhotoSource photoSource, String caption) throws Exception {
+        sendPhoto(botName, message, photoSource, caption, formatter.mode());
+    }
+
+    // ========== DOCUMENT METHODS ==========
+
+    /**
+     * Sends a document with notification message to the specified bot.
+     *
+     * @param botName the name of the bot to use
+     * @param message the notification message
+     * @param documentSource the document source
+     * @param caption the document caption (optional)
+     * @param parseMode the parse mode for the caption
+     * @throws IllegalArgumentException if any required parameter is null or empty
+     */
+    public void sendDocument(String botName, NotificationMessage message, DocumentSource documentSource, 
+                            String caption, ParseMode parseMode) throws Exception {
+        if (botName == null || botName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bot name cannot be null or empty");
+        }
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+        if (documentSource == null) {
+            throw new IllegalArgumentException("Document source cannot be null");
+        }
+        if (parseMode == null) {
+            throw new IllegalArgumentException("Parse mode cannot be null");
+        }
+
+        BotConfig botConfig = botConfigProvider.get(botName);
+        if (botConfig == null) {
+            throw new IllegalArgumentException("Bot not found: " + botName);
+        }
+
+        // Format and process the caption if provided
+        String processedCaption = null;
+        String remainingText = null;
+        if (caption != null && !caption.trim().isEmpty()) {
+            String formattedCaption = formatter.format(message, caption);
+            CaptionHandler.CaptionResult result = CaptionHandler.processCaption(formattedCaption, DEFAULT_CAPTION_STRATEGY, parseMode);
+            processedCaption = result.caption();
+            remainingText = result.remainingText();
+        }
+
+        sendDocumentWithRetry(botConfig, documentSource, processedCaption, remainingText, parseMode);
+    }
+
+    /**
+     * Sends a document with notification message to the specified bot using default parse mode.
+     *
+     * @param botName the name of the bot to use
+     * @param message the notification message
+     * @param documentSource the document source
+     * @param caption the document caption (optional)
+     * @throws IllegalArgumentException if any required parameter is null or empty
+     */
+    public void sendDocument(String botName, NotificationMessage message, DocumentSource documentSource, String caption) throws Exception {
+        sendDocument(botName, message, documentSource, caption, formatter.mode());
+    }
+
+    // ========== PRIVATE HELPER METHODS ==========
+
+    /**
+     * Sends a photo with retry logic.
+     *
+     * @param botConfig the bot configuration
+     * @param photoSource the photo source
+     * @param caption the processed caption
+     * @param remainingText the remaining text to send as separate message
+     * @param parseMode the parse mode
+     */
+    private void sendPhotoWithRetry(BotConfig botConfig, PhotoSource photoSource, String caption, String remainingText, ParseMode parseMode) throws Exception {
+        try (TelegramBotApiClient client = new TelegramBotApiClient(botConfig)) {
+            MessageId messageId;
+            if (photoSource instanceof PhotoSource.ByFileId byFileId) {
+                messageId = client.sendPhotoByFileId(byFileId.fileId(), caption, parseMode, false);
+            } else if (photoSource instanceof PhotoSource.ByUrl byUrl) {
+                messageId = client.sendPhotoByUrl(byUrl.url(), caption, parseMode, false);
+            } else if (photoSource instanceof PhotoSource.ByUpload byUpload) {
+                messageId = client.sendPhotoUpload(byUpload.inputFile(), caption, parseMode, false);
+            } else {
+                throw new IllegalArgumentException("Unknown photo source type: " + photoSource.getClass());
+            }
+            
+            logger.debug("Photo sent successfully with message ID: {}", messageId.messageId());
+            
+            // Send remaining text as separate message if needed
+            if (remainingText != null && !remainingText.trim().isEmpty()) {
+                sendRemainingTextAsMessage(client, remainingText, parseMode);
+            }
+        } catch (TelegramRateLimitException e) {
+            logger.warn("Rate limit exceeded for bot {}, retrying after {} seconds", 
+                       botConfig.getName(), e.getRetryAfter());
+            
+            if (retryPolicy.shouldRetry(0)) {
+                Duration delay = retryPolicy.for429(0, e.getRetryAfter());
+                try {
+                    Thread.sleep(delay.toMillis());
+                    sendPhotoWithRetry(botConfig, photoSource, caption, remainingText, parseMode);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Retry interrupted", ie);
+                } catch (Exception ex) {
+                    logger.error("Retry failed for photo", ex);
+                    throw ex;
+                }
+            } else {
+                throw e;
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send photo for bot {}", botConfig.getName(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Sends a document with retry logic.
+     *
+     * @param botConfig the bot configuration
+     * @param documentSource the document source
+     * @param caption the processed caption
+     * @param remainingText the remaining text to send as separate message
+     * @param parseMode the parse mode
+     */
+    private void sendDocumentWithRetry(BotConfig botConfig, DocumentSource documentSource, String caption, String remainingText, ParseMode parseMode) throws Exception {
+        try (TelegramBotApiClient client = new TelegramBotApiClient(botConfig)) {
+            MessageId messageId;
+            if (documentSource instanceof DocumentSource.ByFileId byFileId) {
+                messageId = client.sendDocumentByFileId(byFileId.fileId(), caption, parseMode);
+            } else if (documentSource instanceof DocumentSource.ByUrl byUrl) {
+                messageId = client.sendDocumentByUrl(byUrl.url(), caption, parseMode);
+            } else if (documentSource instanceof DocumentSource.ByUpload byUpload) {
+                messageId = client.sendDocumentUpload(byUpload.inputFile(), caption, parseMode);
+            } else {
+                throw new IllegalArgumentException("Unknown document source type: " + documentSource.getClass());
+            }
+            
+            logger.debug("Document sent successfully with message ID: {}", messageId.messageId());
+            
+            // Send remaining text as separate message if needed
+            if (remainingText != null && !remainingText.trim().isEmpty()) {
+                sendRemainingTextAsMessage(client, remainingText, parseMode);
+            }
+        } catch (TelegramRateLimitException e) {
+            logger.warn("Rate limit exceeded for bot {}, retrying after {} seconds", 
+                       botConfig.getName(), e.getRetryAfter());
+            
+            if (retryPolicy.shouldRetry(0)) {
+                Duration delay = retryPolicy.for429(0, e.getRetryAfter());
+                try {
+                    Thread.sleep(delay.toMillis());
+                    sendDocumentWithRetry(botConfig, documentSource, caption, remainingText, parseMode);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Retry interrupted", ie);
+                } catch (Exception ex) {
+                    logger.error("Retry failed for document", ex);
+                    throw ex;
+                }
+            } else {
+                throw e;
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send document for bot {}", botConfig.getName(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Sends remaining text as a separate message with proper splitting.
+     *
+     * @param client the Telegram API client
+     * @param remainingText the remaining text to send
+     * @param parseMode the parse mode
+     */
+    private void sendRemainingTextAsMessage(TelegramBotApiClient client, String remainingText, ParseMode parseMode) {
+        try {
+            // Split the remaining text if it's too long
+            List<String> parts = MessageSplitter.safeSplit(remainingText, messageSoftLimit, parseMode);
+            
+            for (String part : parts) {
+                client.sendMessage(part, parseMode);
+                logger.debug("Sent remaining text part: {} characters", part.length());
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send remaining text as message", e);
+            // Don't rethrow - this is supplementary content
+        }
     }
 }

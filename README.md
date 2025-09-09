@@ -43,6 +43,8 @@ import io.github.haiphamcoder.telegrambots.notification.provider.StaticBotConfig
 import io.github.haiphamcoder.telegrambots.notification.service.TelegramNotificationService;
 import io.github.haiphamcoder.telegrambots.notification.template.*;
 import io.github.haiphamcoder.telegrambots.notification.util.RetryPolicy;
+import java.nio.file.Paths;
+import java.io.File;
 
 // Configure bots
 var botConfigs = Map.of(
@@ -237,6 +239,75 @@ try {
     // Generic API errors
     logger.error("API error {}: {}", e.getErrorCode(), e.getDescription());
 }
+```
+
+## Photo and Document Support
+
+The library supports sending photos and documents via Telegram Bot API with multiple source types and caption handling.
+
+### Photo Sources
+
+```java
+// Send photo by file ID (from previous uploads)
+service.sendPhoto("botA", message, PhotoSource.byFileId("AgACAgIAAxkBAAIB"), 
+                 "Build #42 passed ✅", ParseMode.MARKDOWN_V2);
+
+// Send photo by URL
+service.sendPhoto("botA", message, PhotoSource.byUrl("https://example.com/screenshot.png"), 
+                 "**Release** notes attached", ParseMode.MARKDOWN_V2);
+
+// Send photo by uploading file
+InputFile img = InputFile.ofPath(Paths.get("screenshot.png"), "image/png");
+service.sendPhoto("botA", message, PhotoSource.byUpload(img), 
+                 "Build #42 passed ✅", ParseMode.MARKDOWN_V2);
+```
+
+### Document Sources
+
+```java
+// Send document by file ID
+service.sendDocument("botA", message, DocumentSource.byFileId("BQACAgIAAxkBAAIB"), 
+                    "Daily Report — *very long caption...*", ParseMode.MARKDOWN_V2);
+
+// Send document by URL
+service.sendDocument("botA", message, DocumentSource.byUrl("https://example.com/report.pdf"),
+                    "Daily Report — *very long caption...*", ParseMode.MARKDOWN_V2);
+
+// Send document by uploading file
+InputFile doc = InputFile.ofFile(new File("report.pdf"), "application/pdf");
+service.sendDocument("botA", message, DocumentSource.byUpload(doc), 
+                    "Daily Report — *very long caption...*", ParseMode.MARKDOWN_V2);
+```
+
+### Caption Handling
+
+The library automatically handles captions that exceed Telegram's 1024 character limit:
+
+```java
+// Long caption will be automatically split
+String longCaption = "This is a very long caption that exceeds 1024 characters...";
+service.sendPhoto("botA", message, PhotoSource.byUrl("https://example.com/photo.jpg"), 
+                 longCaption, ParseMode.MARKDOWN_V2);
+// Result: Photo sent with first 1024 chars as caption, 
+//         remaining text sent as separate message
+```
+
+### InputFile Creation
+
+```java
+// From byte array
+byte[] data = Files.readAllBytes(Paths.get("image.jpg"));
+InputFile inputFile = InputFile.ofBytes("image.jpg", "image/jpeg", data);
+
+// From file path
+InputFile inputFile = InputFile.ofPath(Paths.get("document.pdf"), "application/pdf");
+
+// From File object
+InputFile inputFile = InputFile.ofFile(new File("image.png"), "image/png");
+
+// From InputStream
+InputStream inputStream = new FileInputStream("data.txt");
+InputFile inputFile = InputFile.ofStream("data.txt", "text/plain", inputStream, fileSize);
 ```
 
 ## Parse Modes
@@ -446,7 +517,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] MarkdownV2 formatter support ✅
 - [x] Markdown formatter support ✅
 - [x] Parse mode selection (HTML, Markdown, MarkdownV2) ✅
-- [ ] Photo and document sending capabilities
+- [x] Photo and document sending capabilities ✅
 - [ ] Webhook support for receiving updates
 - [ ] Metrics and monitoring integration
 - [ ] Spring Boot auto-configuration

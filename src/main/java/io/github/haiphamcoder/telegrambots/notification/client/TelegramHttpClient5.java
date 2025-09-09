@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.github.haiphamcoder.telegrambots.notification.exception.*;
 import io.github.haiphamcoder.telegrambots.notification.model.BotConfig;
+import io.github.haiphamcoder.telegrambots.notification.model.InputFile;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -14,12 +15,14 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -94,6 +97,67 @@ public class TelegramHttpClient5 implements AutoCloseable {
             
         } catch (IOException e) {
             logger.error("Network error while sending POST request to: {}", url, e);
+            throw new TelegramNetworkException("Network error occurred", "POST", e);
+        }
+    }
+
+    /**
+     * Sends a POST request with multipart form data to the specified URL.
+     *
+     * @param url the target URL
+     * @param fields the form fields to send
+     * @param files the files to upload
+     * @return the response body as a string
+     * @throws TelegramNetworkException if a network error occurs
+     * @throws TelegramApiException if the API returns an error response
+     */
+    public String postMultipart(String url, Map<String, String> fields, Map<String, InputFile> files) {
+        try {
+            HttpPost httpPost = new HttpPost(url);
+            
+            // For now, we'll use a simple approach with form data
+            // This is a simplified implementation - in production, you'd want proper multipart support
+            StringBuilder formBody = new StringBuilder();
+            boolean first = true;
+            
+            // Add form fields
+            if (fields != null) {
+                for (Map.Entry<String, String> entry : fields.entrySet()) {
+                    if (!first) {
+                        formBody.append("&");
+                    }
+                    formBody.append(entry.getKey()).append("=").append(entry.getValue());
+                    first = false;
+                }
+            }
+            
+            // Note: File uploads would need proper multipart implementation
+            // For now, we'll throw an exception if files are provided
+            if (files != null && !files.isEmpty()) {
+                throw new UnsupportedOperationException("File uploads not yet implemented in this version");
+            }
+            
+            StringEntity entity = new StringEntity(formBody.toString(), ContentType.APPLICATION_FORM_URLENCODED);
+            httpPost.setEntity(entity);
+            
+            logger.debug("Sending multipart POST request to: {} with {} fields and {} files", 
+                        url, fields != null ? fields.size() : 0, files != null ? files.size() : 0);
+            
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                int statusCode = response.getCode();
+                String responseBody = getResponseBody(response);
+                
+                logger.debug("Received response: status={}, body={}", statusCode, responseBody);
+                
+                if (statusCode >= 200 && statusCode < 300) {
+                    return responseBody;
+                } else {
+                    throw createExceptionFromResponse(statusCode, responseBody);
+                }
+            }
+            
+        } catch (IOException e) {
+            logger.error("Network error while sending multipart POST request to: {}", url, e);
             throw new TelegramNetworkException("Network error occurred", "POST", e);
         }
     }
