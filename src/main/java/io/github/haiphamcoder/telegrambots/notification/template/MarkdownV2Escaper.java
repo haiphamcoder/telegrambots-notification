@@ -134,6 +134,6 @@ public final class MarkdownV2Escaper {
         if (timestamp == null) {
             return "";
         }
-        return escapeText(timestamp);
+        return escapeCode(timestamp);
     }
 }

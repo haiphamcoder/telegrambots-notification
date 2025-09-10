@@ -17,50 +17,50 @@ public final class DefaultHtmlTemplates {
     static {
         // INFO template
         TEMPLATES.put(Severity.INFO, 
-            "<b>ℹ️ [INFO]</b> <b>{{title}}</b><br/>\n" +
-            "{{body}}<br/><br/>\n" +
-            "<blockquote>\n" +
-            "<b>Context</b><br/>\n" +
-            "{{context}}\n" +
-            "</blockquote>\n" +
+            "<b>ℹ️ [INFO]</b> <b>{{title}}</b><br/>" +
+            "{{body}}<br/><br/>" +
+            "<blockquote>" +
+            "<b>Context</b><br/>" +
+            "{{context}}" +
+            "</blockquote>" +
             "<i>Time:</i> <code>{{timestamp}}</code>"
         );
         
         // WARNING template
         TEMPLATES.put(Severity.WARNING, 
-            "<b>⚠️ [WARNING]</b> <b>{{title}}</b><br/>\n" +
-            "<u>{{body}}</u><br/><br/>\n" +
-            "<blockquote expandable>\n" +
-            "<b>Context</b><br/>\n" +
-            "{{context}}\n" +
-            "</blockquote>\n" +
+            "<b>⚠️ [WARNING]</b> <b>{{title}}</b><br/>" +
+            "<u>{{body}}</u><br/><br/>" +
+            "<blockquote expandable>" +
+            "<b>Context</b><br/>" +
+            "{{context}}" +
+            "</blockquote>" +
             "<i>Time:</i> <code>{{timestamp}}</code>"
         );
         
         // ERROR template
         TEMPLATES.put(Severity.ERROR, 
-            "<b>🛑 [ERROR]</b> <b>{{title}}</b><br/>\n" +
-            "<code>{{errorCode}}</code>: {{body}}<br/><br/>\n" +
-            "<pre><code class=\"language-json\">{{context}}</code></pre>\n" +
+            "<b>🛑 [ERROR]</b> <b>{{title}}</b><br/>" +
+            "<code>{{errorCode}}</code>: {{body}}<br/><br/>" +
+            "<pre><code class=\"language-json\">{{context}}</code></pre>" +
             "<i>Time:</i> <code>{{timestamp}}</code>"
         );
         
         // CRITICAL template
         TEMPLATES.put(Severity.CRITICAL, 
-            "<b>🚨 [CRITICAL]</b> <b>{{title}}</b><br/>\n" +
-            "{{body}}<br/><br/>\n" +
-            "<blockquote>\n" +
-            "<b>Immediate Action Required</b><br/>\n" +
-            "{{context}}\n" +
-            "</blockquote>\n" +
+            "<b>🚨 [CRITICAL]</b> <b>{{title}}</b><br/>" +
+            "{{body}}<br/><br/>" +
+            "<blockquote>" +
+            "<b>Immediate Action Required</b><br/>" +
+            "{{context}}" +
+            "</blockquote>" +
             "<i>Time:</i> <code>{{timestamp}}</code>"
         );
         
         // DEBUG template
         TEMPLATES.put(Severity.DEBUG, 
-            "<b>🐞 [DEBUG]</b> <b>{{title}}</b><br/>\n" +
-            "{{body}}<br/><br/>\n" +
-            "<pre><code>{{context}}</code></pre>\n" +
+            "<b>🐞 [DEBUG]</b> <b>{{title}}</b><br/>" +
+            "{{body}}<br/><br/>" +
+            "<pre><code>{{context}}</code></pre>" +
             "<i>Time:</i> <code>{{timestamp}}</code>"
         );
     }

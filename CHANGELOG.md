@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.2] - 2025-09-10
+
+### Fixed
+
+- **HTML Template Formatting**: Fixed HTML templates to remove unnecessary `\n` characters that were causing display issues with `??` symbols
+- **MarkdownV2 Template Formatting**: Fixed MarkdownV2 templates by removing excessive escaping for severity labels like `[INFO]`, `[WARNING]`, etc.
+- **Timestamp Escaping**: Fixed timestamp escaping in MarkdownV2 mode to use `escapeCode()` instead of `escapeText()` for proper display within backticks
+- **Blockquote Structure**: Improved HTML blockquote structure for better message formatting
+
+### Changed
+
+- **Template Cleanup**: Cleaned up all HTML and MarkdownV2 templates for better readability and proper formatting
+- **Escaping Logic**: Improved escaping logic for different content types (text vs code) in MarkdownV2
+
 ## [1.0.0-SNAPSHOT] - 2025-09-09
 
 ### Added

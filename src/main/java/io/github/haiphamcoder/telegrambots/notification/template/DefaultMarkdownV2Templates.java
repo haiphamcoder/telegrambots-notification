@@ -16,7 +16,7 @@ public final class DefaultMarkdownV2Templates {
     static {
         // INFO template
         TEMPLATES.put(Severity.INFO, 
-            "ℹ️ **\\[INFO\\]** **{{title}}**\n" +
+            "ℹ️ **[INFO]** **{{title}}**\n" +
             "{{body}}\n\n" +
             "> **Context**\n" +
             "{{context}}\n\n" +
@@ -25,7 +25,7 @@ public final class DefaultMarkdownV2Templates {
         
         // WARNING template
         TEMPLATES.put(Severity.WARNING, 
-            "⚠️ **\\[WARNING\\]** **{{title}}**\n" +
+            "⚠️ **[WARNING]** **{{title}}**\n" +
             "{{body}}\n\n" +
             "> *Context*\n" +
             "{{context}}\n\n" +
@@ -34,7 +34,7 @@ public final class DefaultMarkdownV2Templates {
         
         // ERROR template
         TEMPLATES.put(Severity.ERROR, 
-            "🛑 **\\[ERROR\\]** **{{title}}**\n" +
+            "🛑 **[ERROR]** **{{title}}**\n" +
             "`{{errorCode}}`: {{body}}\n\n" +
             "```json\n" +
             "{{context}}\n" +
@@ -44,7 +44,7 @@ public final class DefaultMarkdownV2Templates {
         
         // CRITICAL template
         TEMPLATES.put(Severity.CRITICAL, 
-            "🚨 **\\[CRITICAL\\]** **{{title}}**\n" +
+            "🚨 **[CRITICAL]** **{{title}}**\n" +
             "{{body}}\n\n" +
             "> **Immediate Action Required**\n" +
             "{{context}}\n\n" +
@@ -53,7 +53,7 @@ public final class DefaultMarkdownV2Templates {
         
         // DEBUG template
         TEMPLATES.put(Severity.DEBUG, 
-            "🐞 **\\[DEBUG\\]** **{{title}}**\n" +
+            "🐞 **[DEBUG]** **{{title}}**\n" +
             "{{body}}\n\n" +
             "```\n" +
             "{{context}}\n" +

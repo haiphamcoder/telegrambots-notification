@@ -5,7 +5,7 @@
 
     <groupId>io.github.haiphamcoder</groupId>
     <artifactId>telegrambots-notification</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
 
     <name>telegrambots-notification</name>
