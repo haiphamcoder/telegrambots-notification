@@ -46,14 +46,14 @@ class MarkdownV2NotificationFormatterTest {
         String result = formatter.format(testMessage);
         
         assertNotNull(result);
-        assertTrue(result.contains("**\\[ERROR\\]**"));
+        assertTrue(result.contains("**[ERROR]**"));
         assertTrue(result.contains("**Test Error**"));
         assertTrue(result.contains("Something went wrong with special characters: \\_\\*\\[\\]\\(\\)\\~\\`\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!"));
         assertTrue(result.contains("userId: 12345"));
         assertTrue(result.contains("requestId: req\\-abc\\-123"));
         assertTrue(result.contains("errorCode: E001"));
         assertTrue(result.contains("_Time:_"));
-        assertTrue(result.contains("2023\\-01\\-01"));
+        assertTrue(result.contains("2023-01-01"));
         assertTrue(result.contains("**Actions:**"));
         assertTrue(result.contains("[View Details](https://example.com/details)"));
         assertTrue(result.contains("[Retry](https://example.com/retry)"));
@@ -82,7 +82,7 @@ class MarkdownV2NotificationFormatterTest {
                 .build();
         
         String infoResult = formatter.format(infoMessage);
-        assertTrue(infoResult.contains("**\\[INFO\\]**"));
+        assertTrue(infoResult.contains("**[INFO]**"));
         assertTrue(infoResult.contains("**Info Message**"));
         
         // Test WARNING
@@ -94,7 +94,7 @@ class MarkdownV2NotificationFormatterTest {
                 .build();
         
         String warningResult = formatter.format(warningMessage);
-        assertTrue(warningResult.contains("**\\[WARNING\\]**"));
+        assertTrue(warningResult.contains("**[WARNING]**"));
         assertTrue(warningResult.contains("**Warning Message**"));
         
         // Test CRITICAL
@@ -106,7 +106,7 @@ class MarkdownV2NotificationFormatterTest {
                 .build();
         
         String criticalResult = formatter.format(criticalMessage);
-        assertTrue(criticalResult.contains("**\\[CRITICAL\\]**"));
+        assertTrue(criticalResult.contains("**[CRITICAL]**"));
         assertTrue(criticalResult.contains("**Critical Message**"));
         
         // Test DEBUG
@@ -118,7 +118,7 @@ class MarkdownV2NotificationFormatterTest {
                 .build();
         
         String debugResult = formatter.format(debugMessage);
-        assertTrue(debugResult.contains("**\\[DEBUG\\]**"));
+        assertTrue(debugResult.contains("**[DEBUG]**"));
         assertTrue(debugResult.contains("**Debug Message**"));
     }
 

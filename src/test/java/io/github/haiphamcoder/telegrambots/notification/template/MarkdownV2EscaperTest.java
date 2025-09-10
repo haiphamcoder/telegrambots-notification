@@ -114,11 +114,11 @@ class MarkdownV2EscaperTest {
 
     @Test
     void testFormatTimestamp() {
-        // Test normal timestamp (dash should be escaped in MarkdownV2)
-        assertEquals("2023\\-01\\-01 12:00:00", MarkdownV2Escaper.formatTimestamp("2023-01-01 12:00:00"));
+        // Test normal timestamp (dash should NOT be escaped in code blocks)
+        assertEquals("2023-01-01 12:00:00", MarkdownV2Escaper.formatTimestamp("2023-01-01 12:00:00"));
         
-        // Test timestamp with special characters (underscore should be escaped)
-        assertEquals("2023\\-01\\-01\\_12:00:00", MarkdownV2Escaper.formatTimestamp("2023-01-01_12:00:00"));
+        // Test timestamp with special characters (only backslash and backtick need escaping in code)
+        assertEquals("2023-01-01_12:00:00", MarkdownV2Escaper.formatTimestamp("2023-01-01_12:00:00"));
         
         // Test null timestamp
         assertEquals("", MarkdownV2Escaper.formatTimestamp(null));
