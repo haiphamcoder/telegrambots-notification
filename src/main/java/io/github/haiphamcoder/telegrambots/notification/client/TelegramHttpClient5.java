@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -66,14 +67,14 @@ public class TelegramHttpClient5 implements AutoCloseable {
         try {
             HttpPost httpPost = new HttpPost(url);
             
-            // Build form data
+            // Build form data with proper URL encoding
             StringBuilder formBody = new StringBuilder();
             boolean first = true;
             for (Map.Entry<String, String> entry : formData.entrySet()) {
                 if (!first) {
                     formBody.append("&");
                 }
-                formBody.append(entry.getKey()).append("=").append(entry.getValue());
+                formBody.append(entry.getKey()).append("=").append(urlEncode(entry.getValue()));
                 first = false;
             }
             
@@ -126,7 +127,7 @@ public class TelegramHttpClient5 implements AutoCloseable {
                     if (!first) {
                         formBody.append("&");
                     }
-                    formBody.append(entry.getKey()).append("=").append(entry.getValue());
+                    formBody.append(entry.getKey()).append("=").append(urlEncode(entry.getValue()));
                     first = false;
                 }
             }
@@ -271,6 +272,24 @@ public class TelegramHttpClient5 implements AutoCloseable {
             return new TelegramRateLimitException(errorCode, description, retryAfter);
         } else {
             return new TelegramHttpException(statusCode, description);
+        }
+    }
+
+    /**
+     * URL encodes a string using UTF-8 encoding.
+     *
+     * @param value the string to encode
+     * @return the URL encoded string
+     */
+    private String urlEncode(String value) {
+        if (value == null) {
+            return "";
+        }
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        } catch (Exception e) {
+            logger.warn("Failed to URL encode value: {}", value, e);
+            return value; // Return original value if encoding fails
         }
     }
 

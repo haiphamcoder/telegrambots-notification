@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2025-09-10
+
+### Fixed
+
+- **URL Encoding Issue**: Fixed critical URL encoding problem in `TelegramHttpClient5` that was causing emoji and special characters to display as `??` in Telegram messages
+- **Form Data Encoding**: Added proper UTF-8 URL encoding for all form data parameters in both `postForm()` and `postMultipart()` methods
+- **Emoji Display**: Resolved emoji display issues in MarkdownV2 and HTML parse modes by ensuring proper character encoding during API requests
+
+### Changed
+
+- **HTTP Client**: Enhanced `TelegramHttpClient5` with proper URL encoding using `URLEncoder.encode()` with UTF-8 charset
+- **Error Handling**: Improved error handling in URL encoding with fallback to original value if encoding fails
+- **Character Support**: Better support for Unicode characters, emojis, and special symbols in message content
+
 ## [0.0.2] - 2025-09-10
 
 ### Fixed
