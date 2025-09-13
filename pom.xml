@@ -55,12 +55,6 @@
     </properties>
 
     <dependencies>
-        <!-- Telegram Bot API -->
-        <dependency>
-            <groupId>org.telegram</groupId>
-            <artifactId>telegrambots-client</artifactId>
-            <version>${telegrambots.version}</version>
-        </dependency>
 
         <!-- Apache HttpClient 5 -->
         <dependency>
